@@ -23,13 +23,7 @@ def get_latents_from_seed(seed: int, batch_size: int, height: int, width: int) -
     image_latents = rng.standard_normal(latents_shape).astype(np.float32)
     return image_latents
 
-pndm = PNDMScheduler.from_pretrained(model, subfolder="scheduler")
-lms = LMSDiscreteScheduler.from_pretrained(model, subfolder="scheduler")
-ddim = DDIMScheduler.from_pretrained(model, subfolder="scheduler")
-ddpm = DDPMScheduler.from_pretrained(model, subfolder="scheduler")
-euler = EulerDiscreteScheduler.from_pretrained(model, subfolder="scheduler")
-eulera = EulerAncestralDiscreteScheduler.from_pretrained(model, subfolder="scheduler")
-dpms = DPMSolverMultistepScheduler.from_pretrained(model, subfolder="scheduler")
+
 
 parser = argparse.ArgumentParser(description="simple interface for ONNX based Stable Diffusion")
 parser.add_argument(
@@ -44,11 +38,27 @@ parser.add_argument("--height", dest="height", type=int, default=384, help="heig
 parser.add_argument("--width", dest="width", type=int, default=384, help="width of the image")
 parser.add_argument("--seed", dest="seed", default="", help="seed for the generator")
 parser.add_argument("--cpu-only", action="store_true", default=False, help="run ONNX with CPU")
-parser.add_argument("--scheduler", dest="scheduler", default=pndm, help="schedulers: pndm, lms, ddim, ddpm, euler, eulera, dpms")
+parser.add_argument("--scheduler", dest="scheduler", default="pndm", help="schedulers: pndm, lms, ddim, ddpm, euler, eulera, dpms")
 args = parser.parse_args()
 
+if args.scheduler == "pndm":
+    scheduler = PNDMScheduler.from_pretrained(args.model_path, subfolder="scheduler")
+elif args.scheduler == "lms":
+    scheduler = LMSDiscreteScheduler.from_pretrained(args.model_path, subfolder="scheduler")
+elif args.scheduler == "ddim":
+    scheduler = DDIMScheduler.from_pretrained(args.model_path, subfolder="scheduler")
+elif args.scheduler == "ddpm":
+    scheduler = DDPMScheduler.from_pretrained(args.model_path, subfolder="scheduler")
+elif args.scheduler == "euler":
+    scheduler = EulerDiscreteScheduler.from_pretrained(args.model_path, subfolder="scheduler")
+elif args.scheduler == "eulera":
+    scheduler = EulerAncestralDiscreteScheduler.from_pretrained(args.model_path, subfolder="scheduler")
+elif args.scheduler == "dpms":
+    scheduler = DPMSolverMultistepScheduler.from_pretrained(args.model_path, subfolder="scheduler")
+else:
+    scheduler = PNDMScheduler.from_pretrained(args.model_path, subfolder="scheduler")
+
 provider = "CPUExecutionProvider" if args.cpu_only else "DmlExecutionProvider"
-scheduler = PNDMScheduler.from_config(model_path, subfolder="scheduler")
 pipe = OnnxStableDiffusionPipeline.from_pretrained(
     args.model_path, provider=provider, scheduler=scheduler, safety_checker=None)
 
@@ -93,4 +103,3 @@ images[0].save(os.path.join(output_path, f"{next_index:06}-00.png"))
 time_taken = (finish - start) / 60.0
 status = f"Run index {next_index:06} took {time_taken:.1f} minutes to generate an image. seed: {seed}"
 print(status)
-
