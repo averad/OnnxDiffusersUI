@@ -1,0 +1,9 @@
+diffusers==0.6.0
+transformers
+onnxruntime
+onnx
+torch
+gradio
+scipy
+ftfy
+OmegaConf
