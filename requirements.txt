@@ -1,4 +1,4 @@
-git+https://github.com/huggingface/diffusers.git
+diffusers>=0.8.1
 transformers
 onnxruntime
 onnx
